@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Check Faces Match</title>
+
+</head>
+
+<body class="bg-gray-900 font-sans">
+
+    <div class="max-w-screen-xl mx-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- Display opencv face detect camera live -->
+        <div class="bg-white p-6 rounded-md">
+            <h2 class="text-xl font-bold mb-2 mt-2">Web Cam Live View</h2>
+            <img src="{{ url_for('video_feed') }}">
+        </div>
+
+        <!-- Right Column (All Students Data) -->
+        <div class="bg-white p-6 rounded-md">
+            <h1 class="text-3xl font-bold mb-4">All Students Data</h1>
+
+            <!-- Display all students' data -->
+            {% if all_students %}
+            <ul>
+                {% for student in all_students %}
+                <li>{{ student.name }} - {{ student.roll_no }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No students found.</p>
+            {% endif %}
+        </div>
+
+        <!-- Right Column (Face Match Results) -->
+        <div class="bg-white p-6 rounded-md">
+            <h1 class="text-3xl font-bold mb-4">Face Match Results</h1>
+
+            <!-- Iterate through all students and display face match results -->
+            {% for result in face_match_results %}
+            <h3>{{ result.name }} - {{ result.roll_no }}</h3>
+            {% if result.match_found %}
+            <p>Face match found!</p>
+            {% else %}
+            <p>No face match found.</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+    </div>
+
+</body>
+
+</html>

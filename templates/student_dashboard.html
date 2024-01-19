@@ -1,0 +1,321 @@
+<!-- templates/base.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css">
+
+    <title>Student Dashboard</title>
+
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="static/css/tailwind-ui.css">
+    <style>
+        @media (min-width: 640px) {
+
+            /* Larger screens */
+            .content-container {
+                margin-left: 250px;
+
+            }
+
+            aside {
+                width: 250px;
+            }
+
+            .menu-toggle,
+            .close-toggle {
+                display: none;
+                /* Hide the toggle button on desktop */
+            }
+        }
+
+        @media (max-width: 639px) {
+
+            /* Smaller screens */
+            .content-container {
+                margin-left: 0;
+            }
+
+            aside {
+                width: 100%;
+                display: none;
+                /* Initially hide the menu on smaller screens */
+            }
+
+            aside.show {
+                display: block;
+
+                /* Show the menu when the class 'show' is added */
+            }
+
+            .menu-toggle,
+            .close-toggle {
+                display: block;
+                cursor: pointer;
+            }
+
+            .close-toggle {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+            }
+
+        }
+    </style>
+</head>
+
+<body class="relative bg-yellow-50 overflow-hidden max-h-screen">
+    <div class="menu-toggle px-4 py-2 cursor-pointer text-gray-600 bg-yellow-200">
+        <div class="flex items-center justify-between ">
+            <div class="flex items-center">
+                <i class="fa-duotone fa-bars text-lg"></i>
+                <h1 class="text-md font-bold px-3 leading-none"><span class="text-yellow-700">Face Recognization
+                    </span> Attendance System
+                </h1>
+            </div>
+            <!-- Avatar Container -->
+            <div class="bg-white  rounded-full shadow-md">
+                <!-- Avatar Image -->
+                {% if image_path %}
+                <img src="{{ image_path }}" alt="Student Image" class="w-10 h-10 object-cover rounded-full">
+                {% else %}
+
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+    <aside class="fixed inset-y-0 left-0 bg-white shadow-md max-h-screen w-60">
+        <div class="close-toggle px-2 py-2 cursor-pointer text-gray-600">
+            <i class="fa-duotone fa-xmark text-lg"></i>
+        </div>
+        <div class="flex flex-col justify-between h-full ">
+            <div class="flex-grow">
+                <div class="px-4 py-6 text-center border-b">
+                    <h1 class="text-lg font-bold leading-none"><span class="text-yellow-700">Face Recognization
+                        </span> Attendance System
+                    </h1>
+                </div>
+                <div class="p-4">
+                    {% if image_path %}
+                    <img src="{{ image_path }}" alt="Student Image" class="rounded-full h-16 w-16">
+                    {% else %}
+                    <p>No images available</p>
+                    {% endif %}
+
+                    <div class="mt-4">
+                        <h2 class="text-lg font-semibold">Welcome, {{ name }}!</h2>
+                        <p class="text-gray-600">Your Roll Number: {{ roll_no }}</p>
+                    </div>
+
+
+                </div>
+            </div>
+            <div class="p-4">
+                <a href="/logout" class="mt-4 text-blue-500">
+                    <button type="button"
+                        class="inline-flex items-center justify-center h-9 px-4 rounded-xl bg-gray-900 text-gray-300 hover:text-white text-sm font-semibold transition">
+                        <i class="fa-duotone fa-arrow-right-from-bracket"></i>
+                    </button>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="ml-0 pt-0 max-h-screen overflow-auto content-container">
+        <div class="px-6 py-8">
+            <div class="max-w-8xl mx-auto">
+                <div class="bg-white rounded-3xl p-8 mb-5">
+                    <div id="calendar"></div>
+                    <div class="border border-t"></div>
+                    <!-- Chart to display attendance data -->
+                    <canvas id="attendanceChart" class="mt-5"></canvas>
+
+
+
+                    <div>
+                        {% for entry in attendance_data %}
+                        {% set key, data = entry %}
+                        {% set month, year = key.split('_') %}
+                        {% set month_number = month|int %}
+                        {% set month_name = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+                        'September',
+                        'October', 'November', 'December'][month_number - 1] %}
+                        {% set formatted_key = month_name ~ ' ' ~ year %}
+                        <h1 class="text-2xl font-bold mb-4">{{ formatted_key }}</h1>
+
+                        {% for rollno, days in data.items() %}
+                        <div>
+                            <h2 class="text-lg font-semibold mb-2">RollNo: {{ rollno }}</h2>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {% for day, details in days.items() %}
+                            <div class="bg-yellow-100 p-4 rounded-md border-t-2 border-b-2   border-yellow-500 mb-4">
+                                <h2 class="text-lg font-semibold mb-2">Day: {{ day }}</h2>
+                                <div class="border-t border-gray-200"></div>
+                                <ul>
+                                    {% for detail_key, detail_value in details.items() %}
+                                    <li><span class="font-semibold">{{ detail_key }}:</span> {{ detail_value }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+
+                        {% endfor %}
+                    </div>
+
+
+
+
+
+
+
+
+
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        // JavaScript to handle the toggle functionality
+        const menuToggle = document.querySelector('.menu-toggle');
+        const closeToggle = document.querySelector('.close-toggle');
+        const asideMenu = document.querySelector('aside');
+
+        menuToggle.addEventListener('click', () => {
+            asideMenu.classList.toggle('show');
+        });
+
+        closeToggle.addEventListener('click', () => {
+            asideMenu.classList.remove('show');
+        });
+
+        // Add logic to set the active state based on the current URL path
+        const currentPath = window.location.pathname;
+        const links = document.querySelectorAll('aside ul li a');
+
+        links.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('bg-yellow-200');
+            }
+        });
+    </script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Your attendance data
+            var attendanceData = {{ attendance_data | tojson if attendance_data else '[]'
+        }};
+
+        // Function to convert attendance data to FullCalendar events
+        function convertToEvents(data) {
+            var events = [];
+            for (var i = 0; i < data.length; i++) {
+                var tuple = data[i];
+                var monthYear = tuple[0];
+                var monthData = tuple[1];
+
+                for (var rollNo in monthData) {
+                    var rollNoData = monthData[rollNo];
+                    for (var date in rollNoData) {
+                        var present = rollNoData[date]['present'];
+                        var timestamp = rollNoData[date]['timestamp'];
+                        var title = present ? 'Present\n' + timestamp : 'Absent';
+                        events.push({
+                            title: title,
+                            start: date,
+                            color: present ? 'green' : 'red'
+                        });
+                    }
+                }
+            }
+            return events;
+        }
+
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,multiMonthYear'
+            },
+            initialView: 'multiMonthYear',
+            events: convertToEvents(attendanceData)
+        });
+
+        calendar.render();
+
+        // Function to convert attendance data to month-wise format for a bar chart
+        function convertToMonthChartData(data) {
+            var monthCounts = {};
+
+            for (var i = 0; i < data.length; i++) {
+                var tuple = data[i];
+                var monthYear = tuple[0];
+                var monthData = tuple[1];
+
+                for (var rollNo in monthData) {
+                    var rollNoData = monthData[rollNo];
+                    for (var date in rollNoData) {
+                        var present = rollNoData[date]['present'];
+
+                        // Extract month and year from the date
+                        var [year, month] = date.split('-').slice(0, 2);
+
+                        // Create or update count for the month
+                        var monthKey = year + '-' + month;
+                        if (!monthCounts[monthKey]) {
+                            monthCounts[monthKey] = { 'Present': 0, 'Absent': 0 };
+                        }
+                        monthCounts[monthKey][present ? 'Present' : 'Absent']++;
+                    }
+                }
+            }
+
+            return monthCounts;
+        }
+
+        // Get month-wise chart data
+        var monthChartData = convertToMonthChartData(attendanceData);
+
+        // Create an array of labels and an array of data for each label
+        var labels = Object.keys(monthChartData);
+        var presentData = labels.map(function (label) {
+            return monthChartData[label]['Present'];
+        });
+
+        // Create a bar chart
+        var ctx = document.getElementById('attendanceChart').getContext('2d');
+        var attendanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Present Days',
+                    data: presentData,
+                    backgroundColor: 'green'
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true
+                    }
+                }
+            }
+        });
+    });
+    </script>
+
+</body>

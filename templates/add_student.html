@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Add Student{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2">
+
+    <!-- Display opencv face detect camera live and take picture  -->
+    <div class="bg-white p-2 rounded-md">
+        <h2 class="text-xl font-bold mb-2 mt-2">Web Cam Live View </h2>
+        <img src="{{ url_for('video_feed') }}" class="border border-gray-500 rounded-md object-cover">
+    </div>
+
+    <!-- Right Column (Student Form) -->
+    <div class="bg-white p-6 rounded-md">
+        <h1 class="text-3xl font-bold mb-4">Add Student</h1>
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="{% if message.startswith('error') %}text-red-500{% else %}text-green-500{% endif %}">
+                {{ message.split(':', 1)[1] }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+
+
+        <form action="/add_student" method="post">
+            <!-- Your form fields go here -->
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required
+                class="w-full mb-4 p-2 border border-gray-300 outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 rounded-md">
+
+            <label for="roll_no">Roll No:</label>
+            <input type="text" id="roll_no" name="roll_no" required
+                class="w-full mb-4 p-2 border border-gray-300 outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 rounded-md">
+
+            <label for="dob">Date of Birth:</label>
+            <input type="text" id="dob" name="dob" required
+                class="w-full mb-4 p-2 border border-gray-300 outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 rounded-md">
+
+            <label for="address">Address:</label>
+            <input type="text" id="address" name="address" required
+                class="w-full mb-4 p-2 border border-gray-300 outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 rounded-md">
+
+            <label for="mobile_no">Mobile No:</label>
+            <input type="text" id="mobile_no" name="mobile_no" required
+                class="w-full mb-4 p-2 border border-gray-300 outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 rounded-md">
+
+            <button type="submit"
+                class="bg-gray-900 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600">
+                Save Student
+            </button>
+        </form>
+
+
+
+
+    </div>
+
+</div>
+{% endblock %}

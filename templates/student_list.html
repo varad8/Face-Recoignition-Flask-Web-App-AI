@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Student List{% endblock %}
+
+{% block content %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+
+<div class="grid grid-cols-1 md:grid-cols-2">
+
+    <div class="bg-white p-6 rounded-md">
+        <h1 class="text-3xl font-bold mb-4">Student List</h1>
+        <ul>
+            {% for student in all_students %}
+            <li class="mb-2 flex">
+                <img src="{{student.image_path}}" alt="{{ student.name }}"
+                    class="w-16 h-16 inline-block mr-2 rounded-full" />
+
+                <a href="{{ url_for('student_list', roll_no=student.roll_no) }}">
+                    {{ student.name }}
+                    <br>
+                    <span class="text-gray-500">{{ student.roll_no }}</span>
+                </a>
+            </li>
+            <!-- Horizontal Divider -->
+            <div class="border-t my-6"></div>
+            {% endfor %}
+        </ul>
+    </div>
+
+
+    <!-- Right Column (Student Selected data shown) -->
+    <div class="bg-white p-6 rounded-md grid grid-cols-1 gap-4">
+        <div class="flex flex-wrap gap-4">
+            {% if selected_student %}
+            <div class="w-full md:w-1/3 mb-4 md:mb-0">
+                {% if image_path %}
+                <img src="{{ image_path }}" alt="{{ selected_student.name }}"
+                    class="rounded shadow-sm border border-gray-300 w-48 h-48 p-2">
+                {% else %}
+                <p>No images available for this student.</p>
+                {% endif %}
+
+            </div>
+            <div class="w-full md:w-1/2">
+                <h2 class="text-2xl font-bold">{{ selected_student.name }}</h2>
+                <p>Roll No: {{ selected_student.roll_no }}</p>
+                <p>DOB: {{ selected_student.dob }}</p>
+                <p>Address: {{ selected_student.address }}</p>
+                <p>Mobile No: {{ selected_student.mobile_no }}</p>
+            </div>
+            {% else %}
+            <p>Not Data Found ...</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Show here the calendar and total attendance count -->
+<div class="bg-white p-6 rounded-md mt-8 overflow-auto">
+    <h2 class="text-2xl font-bold mb-4">Attendance Calendar</h2>
+
+    <div id="calendar"></div>
+
+
+
+</div>
+
+
+<div class="border border-t"></div>
+<!-- Chart to display attendance data -->
+<canvas id="attendanceChart" class="mt-5"></canvas>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Your attendance data
+        var attendanceData = {{ attendance_data | tojson if attendance_data else '[]'
+    }};
+
+    // Function to convert attendance data to FullCalendar events
+    function convertToEvents(data) {
+        var events = [];
+        for (var i = 0; i < data.length; i++) {
+            var tuple = data[i];
+            var monthYear = tuple[0];
+            var monthData = tuple[1];
+
+            for (var rollNo in monthData) {
+                var rollNoData = monthData[rollNo];
+                for (var date in rollNoData) {
+                    var present = rollNoData[date]['present'];
+                    var timestamp = rollNoData[date]['timestamp'];
+                    var title = present ? 'Present\n' + timestamp : 'Absent';
+                    events.push({
+                        title: title,
+                        start: date,
+                        color: present ? 'green' : 'red'
+                    });
+                }
+            }
+        }
+        return events;
+    }
+
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek,multiMonthYear'
+        },
+        initialView: 'multiMonthYear',
+        events: convertToEvents(attendanceData)
+    });
+
+    calendar.render();
+
+    // Function to convert attendance data to month-wise format for a bar chart
+    function convertToMonthChartData(data) {
+        var monthCounts = {};
+
+        for (var i = 0; i < data.length; i++) {
+            var tuple = data[i];
+            var monthYear = tuple[0];
+            var monthData = tuple[1];
+
+            for (var rollNo in monthData) {
+                var rollNoData = monthData[rollNo];
+                for (var date in rollNoData) {
+                    var present = rollNoData[date]['present'];
+
+                    // Extract month and year from the date
+                    var [year, month] = date.split('-').slice(0, 2);
+
+                    // Create or update count for the month
+                    var monthKey = year + '-' + month;
+                    if (!monthCounts[monthKey]) {
+                        monthCounts[monthKey] = { 'Present': 0, 'Absent': 0 };
+                    }
+                    monthCounts[monthKey][present ? 'Present' : 'Absent']++;
+                }
+            }
+        }
+
+        return monthCounts;
+    }
+
+    // Get month-wise chart data
+    var monthChartData = convertToMonthChartData(attendanceData);
+
+    // Create an array of labels and an array of data for each label
+    var labels = Object.keys(monthChartData);
+    var presentData = labels.map(function (label) {
+        return monthChartData[label]['Present'];
+    });
+
+    // Create a bar chart
+    var ctx = document.getElementById('attendanceChart').getContext('2d');
+    var attendanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Present Days',
+                data: presentData,
+                backgroundColor: 'green'
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    stacked: true
+                }
+            }
+        }
+    });
+    });
+</script>
+{% endblock %}

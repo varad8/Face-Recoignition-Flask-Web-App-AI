@@ -1,0 +1,24 @@
+<!-- student_profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile</title>
+</head>
+
+<body>
+    <h1>Welcome, {{ student_data.name }}!</h1>
+    <p>Roll No: {{ student_data.roll_no }}</p>
+    <p>Address: {{ student_data.address }}</p>
+    <p>Date of Birth: {{ student_data.dob }}</p>
+    <p>Mobile No: {{ student_data.mobile_no }}</p>
+
+    <!-- Add more fields as needed -->
+
+    <!-- You can also provide links to other student-related pages -->
+    <a href="{{ url_for('student_logout') }}">Logout</a>
+</body>
+
+</html>

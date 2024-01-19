@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="bg-white p-6 rounded-md border border-gray-200 shadow">
+    <h1 class="text-3xl font-bold mb-4">Welcome to the Dashboard</h1>
+
+    <div class="flex items-center gap-2  flex-wrap">
+
+        <!-- Image -->
+        <img src="static/3dman.png" alt="Profile Image"
+            class="rounded-full shadow-md border border-blue-500 w-32 h-32 object-cover object-center mb-4">
+
+        <div>
+            <p class="mb-4">Hello, <strong>{{ name }}</strong>! <br /> Your email is {{ email }}.</p>
+            <!-- Log out button -->
+
+            <a href="{{ url_for('logout') }}"
+                class="text-sm rounded-full hover:shadow-md hover:border-yellow-500 border  text-yellow-900 bg-yellow-200 px-6 py-1.5 focus:outline-none focus:text-blue-600">
+                Logout
+            </a>
+
+
+        </div>
+
+
+
+
+    </div>
+
+</div>
+
+<h1 class="text-3xl font-bold mb-4 mt-5">Analytics</h1>
+
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
+    <!-- Total Student Count -->
+    <div class="shadow border border-gray-200 px-6 py-2 rounded-md bg-white hover:bg-gray-100">
+        <div class="flex items-center ">
+            <i class="fa-duotone fa-user mr-4 text-yellow-800 text-3xl"></i>
+            <div>
+                <strong class="text-2xl">{{total_students_count}}</strong>
+                <p class="text-gray-700">Total Students</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Presenty -->
+    <div class="shadow border border-gray-200 px-6 py-2 rounded-md bg-white hover:bg-gray-100">
+        <div class=" flex items-center ">
+            <i class="fa-duotone fa-hand mr-4 text-3xl text-yellow-800"></i>
+            <div>
+                {% for year, count in yearly_counts.items() %}
+                <strong class="text-2xl">{{ count }}</strong>
+                <p class="text-gray-700">Total Presenty <br> ({{ year }})</p>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Total This Month -->
+    <div class="shadow border border-gray-200 px-6 py-2 rounded-md bg-white hover:bg-gray-100">
+        <div class=" flex items-center ">
+            <i class="fa-duotone fa-calendar-users text-yellow-800  mr-4 text-3xl"></i>
+            <div>
+                {% for month, count in this_month_count.items() %}
+                <strong class="text-2xl">{{ count }}</strong>
+                <p class="text-gray-700">Total Presenty <br> ({{ month }})</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Total This day -->
+    <div class="shadow border border-gray-200 px-6 py-2 rounded-md bg-white hover:bg-gray-100">
+        <div class=" flex items-center ">
+            <i class="fa-duotone fa-calendar-users text-yellow-800  mr-4 text-3xl"></i>
+            <div>
+                {% for date, count in todays_count.items() %}
+                <strong class="text-2xl">{{ count }}</strong>
+                <p class="text-gray-700">Total Presenty <br> ({{ date }})</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
+
+    <div class="shadow border border-gray-200 px-6 py-2 rounded-md bg-white hover:bg-gray-100">
+        <div class="flex items-center ">
+            <!-- Chart for Yearly Counts -->
+            <canvas id="yearlyCountsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="shadow border border-gray-200 px-6 py-2 rounded-md bg-white hover:bg-gray-100">
+        <div class="flex items-center ">
+            <!-- Chart for This Month Counts -->
+            <canvas id="thisMonthCountsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="shadow border border-gray-200 px-6 py-2 rounded-md bg-white hover:bg-gray-100">
+        <div class="flex items-center ">
+            <!-- Chart for Today's Counts -->
+            <canvas id="todaysCountsChart"></canvas>
+        </div>
+    </div>
+</div>
+<p class="text-gray-500 mt-2">Represent the presenty data of current month,year and current day</p>
+
+
+<div class="border border-t mt-5 mb-5"></div>
+
+<!-- All Data Show Here Month Wise -->
+<div>
+    <!-- Chart to display all data with timestamps -->
+    <canvas id="attendanceTimestampChart" width="400" height="200"></canvas>
+    <p class="text-gray-500 mt-2">Represent the all presenty data</p>
+
+</div>
+
+
+<!-- Javascript code to create charts using Chart.js that show all data in chart -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Your attendance data with timestamps
+        var attendanceData = {{ attendance_record | tojson if attendance_record else '[]'
+    }};
+
+    // Function to convert attendance data to format suitable for a bar chart with timestamps
+    function convertToTimestampChartData(data) {
+        var timestamps = {};
+
+        for (var monthKey in data) {
+            var monthData = data[monthKey];
+
+            for (var rollNo in monthData) {
+                var rollNoData = monthData[rollNo];
+                for (var date in rollNoData) {
+                    var present = rollNoData[date]['present'];
+                    var timestamp = rollNoData[date]['timestamp'];
+
+                    // Create or update count for the date
+                    if (!timestamps[date]) {
+                        timestamps[date] = { 'Present': 0, 'Absent': 0 };
+                    }
+                    timestamps[date][present ? 'Present' : 'Absent']++;
+                }
+            }
+        }
+
+        return timestamps;
+    }
+
+    // Get chart data with timestamps
+    var timestampChartData = convertToTimestampChartData(attendanceData);
+
+    // Create an array of labels and an array of data for each label
+    var labels = Object.keys(timestampChartData);
+    var presentData = labels.map(function (label) {
+        return timestampChartData[label]['Present'];
+    });
+
+    // Create a bar chart for all data with timestamps
+    var ctxTimestamp = document.getElementById('attendanceTimestampChart').getContext('2d');
+    var attendanceTimestampChart = new Chart(ctxTimestamp, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Present',
+                data: presentData,
+                backgroundColor: 'green',
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    stacked: true
+                }
+            }
+        }
+    });
+    });
+</script>
+
+
+
+
+
+
+
+
+<!-- JavaScript code to create charts using Chart.js that show present data -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Parse JSON data
+        var yearlyCountsData = JSON.parse('{{ yearly_counts | tojson | safe}}');
+        var thisMonthCountsData = JSON.parse('{{ this_month_count | tojson | safe}}');
+        var todaysCountsData = JSON.parse('{{ todays_count | tojson | safe}}');
+
+        // Chart for Yearly Counts
+        new Chart(document.getElementById('yearlyCountsChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(yearlyCountsData),
+                datasets: [{
+                    label: 'Yearly Counts',
+                    data: yearlyCountsData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+
+
+            },
+
+
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+
+            }
+        });
+
+        // Chart for This Month Counts
+        new Chart(document.getElementById('thisMonthCountsChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(thisMonthCountsData),
+                datasets: [{
+                    label: 'This Month Counts',
+                    data: thisMonthCountsData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Chart for Today's Counts
+        new Chart(document.getElementById('todaysCountsChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(todaysCountsData),
+                datasets: [{
+                    label: 'Today\'s Counts',
+                    data: todaysCountsData,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock %}
